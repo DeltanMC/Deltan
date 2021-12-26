@@ -40,16 +40,10 @@ public class Main {
                     .map(Integer::parseInt)
                     .orElse(DEFAULT_SERVER_PORT);
 
-            long startTime = System.currentTimeMillis();
-
             Injector injector = Guice.createInjector(DEVELOPMENT_STAGE, new DeltanModule());
 
             Server server = injector.getInstance(Server.class);
             server.start(host, port);
-
-            long endTime = System.currentTimeMillis();
-
-            LOGGER.info(String.format("Deltan took %d ms to start", endTime - startTime));
 
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         } catch (ParseException | NumberFormatException e) {
