@@ -1,6 +1,5 @@
 package org.deltan.deltan.server;
 
-import org.deltan.deltan.command.ConsoleCommandReaderThread;
 import org.deltan.deltan.net.NetServer;
 
 import javax.inject.Inject;
@@ -10,41 +9,40 @@ public class ServerImpl implements Server {
 
     private static final Logger LOGGER = Logger.getLogger("Deltan");
 
+    private final ServerAddressFactory addressFactory;
     private final NetServer netServer;
-    private final ServerAddressFactory serverAddressFactory;
-    private final ConsoleCommandReaderThread consoleCommandReaderThread;
+
+    private boolean running;
 
     @Inject
-    public ServerImpl(NetServer netServer,
-                      ServerAddressFactory serverAddressFactory,
-                      ConsoleCommandReaderThread consoleCommandReaderThread) {
+    public ServerImpl(ServerAddressFactory addressFactory, NetServer netServer) {
+        this.addressFactory = addressFactory;
         this.netServer = netServer;
-        this.serverAddressFactory = serverAddressFactory;
-        this.consoleCommandReaderThread = consoleCommandReaderThread;
+
+        this.running = false;
     }
 
     @Override
     public void start(String host, int port) {
-        LOGGER.info("Starting server...");
-        long startTime = System.currentTimeMillis();
-
-        ServerAddress address = this.serverAddressFactory.create(host, port);
+        ServerAddress address = this.addressFactory.create(host, port);
         this.netServer.start(address);
 
-        long endTime = System.currentTimeMillis();
-        LOGGER.info(String.format("Deltan took %d ms to start", endTime - startTime));
-
-        this.consoleCommandReaderThread.start();
+        this.running = true;
     }
 
     @Override
     public void stop() {
+        this.running = false;
+
         LOGGER.info("Stopping server...");
 
         this.netServer.shutdown();
 
-        this.consoleCommandReaderThread.shutdown();
-
         LOGGER.info("Server stopped successfully !");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return this.running;
     }
 }
