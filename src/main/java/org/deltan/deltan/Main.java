@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import org.apache.commons.cli.*;
+import org.deltan.deltan.command.ConsoleCommandReaderThread;
 import org.deltan.deltan.server.Server;
 
 import java.util.Optional;
@@ -40,10 +41,19 @@ public class Main {
                     .map(Integer::parseInt)
                     .orElse(DEFAULT_SERVER_PORT);
 
+            LOGGER.info("Starting Deltan...");
+            long startTime = System.currentTimeMillis();
+
             Injector injector = Guice.createInjector(DEVELOPMENT_STAGE, new DeltanModule());
 
             Server server = injector.getInstance(Server.class);
             server.start(host, port);
+
+            long endTime = System.currentTimeMillis();
+            LOGGER.info(String.format("Deltan started in %d ms !", endTime - startTime));
+
+            Thread consoleCommandReaderThread = injector.getInstance(ConsoleCommandReaderThread.class);
+            consoleCommandReaderThread.start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         } catch (ParseException | NumberFormatException e) {

@@ -1,5 +1,7 @@
 package org.deltan.deltan.command;
 
+import org.deltan.deltan.server.Server;
+
 import javax.inject.Inject;
 import java.io.Console;
 
@@ -9,39 +11,26 @@ public class ConsoleCommandReaderThread extends Thread {
 
     private final Console console;
     private final CommandDispatcher commandDispatcher;
-
-    private boolean isRunning;
+    private final Server server;
 
     @Inject
-    public ConsoleCommandReaderThread(Console console, CommandDispatcher commandDispatcher) {
+    public ConsoleCommandReaderThread(Console console,
+                                      CommandDispatcher commandDispatcher,
+                                      Server server) {
         super("Console");
 
         this.console = console;
         this.commandDispatcher = commandDispatcher;
-    }
-
-    @Override
-    public synchronized void start() {
-        super.start();
-
-        this.isRunning = true;
+        this.server = server;
     }
 
     @Override
     public void run() {
-        while (isRunning) {
+        while (this.server.isRunning()) {
             System.out.printf("%c ", PROMPT);
             String command = this.console.readLine();
 
             this.commandDispatcher.dispatch(command);
         }
-    }
-
-    public void shutdown() {
-        if (!this.isRunning) {
-            throw new IllegalStateException("The Console Thread is already shutdown");
-        }
-
-        this.isRunning = false;
     }
 }
